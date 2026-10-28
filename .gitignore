@@ -1,0 +1,20 @@
+# Universal .gitignore (Place this in your main root folder)
+
+# Target specific .env files
+backend/.env
+frontend/.env
+
+*.env
+.env*
+
+
+backend/node_modules/
+frontend/node_modules/
+
+# Target build/production folders
+frontend/dist/
+frontend/build/
+
+# Operating system files
+.DS_Store
+Thumbs.db
