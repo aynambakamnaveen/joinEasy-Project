@@ -12,11 +12,10 @@ import {
     AlertCircle,
     ClipboardList,
     ArrowUpRight,
-    Users,
     NotepadText, Link2, FileUp, X,
     GraduationCap ,
     UserRound ,
-    Crown , ClipboardCheck 
+    Crown , ClipboardCheck,MoreVertical, Users, BellRing 
 } from "lucide-react";
 import { useAppContext } from "../Context/UserContext";
 import api from "../api/axios";
@@ -62,6 +61,43 @@ const MyAssignments = () => {
     const [members, setMembers] = useState<string[]>([])
     const [leader, setLeader] = useState<string>(members[0] || "")
     const [selectedGroup, setSelectedGroup] = useState<any>(null);
+    const [sendingAlert, setSendingAlert] = useState(false);
+    const [message, setMessage] = useState("");
+    const sendAlertMail = async (
+        mail: string,
+        teacherName: string,
+        dueDate: Date,
+        messageText: string
+        ) => {
+        if (!messageText.trim()) {
+            toast.error("Please enter a message");
+            return;
+        }
+        if (!mail || !teacherName || !dueDate || isNaN(dueDate.getTime())) {
+            toast.error("Something is missing. Please try again.");
+            return;
+        }
+        try {
+            setSendingAlert(true);
+
+            await api.post("/sendAlertMail", {
+                email: mail,
+                teacherName,
+                dueDate: dueDate.toISOString(),
+                message,
+            });
+
+            toast.success("Alert sent successfully");
+            setMessage("");
+            document.getElementById("sendAlert")?.close();
+            document.getElementById("showData")?.close()
+        } catch (err) {
+            console.error(err);
+            toast.error("Something went wrong. Please try again.");
+        } finally {
+            setSendingAlert(false);
+        }
+    };
     const assignments = useMemo(
         () => teacherAssignments || [],
         [teacherAssignments]
@@ -817,165 +853,105 @@ const MyAssignments = () => {
             <button aria-label="Close modal">Close</button>
         </form>
         </dialog>
+
         {/**viewing groups */}
-        
         <dialog id="my_modal_2" className="modal">
-        <div className="modal-box flex max-h-[85vh] w-11/12 max-w-3xl flex-col overflow-hidden rounded-xl border border-slate-700 bg-[#0e1118] p-0 text-slate-100">
+        <div className="modal-box flex max-h-[85vh] w-11/12 max-w-3xl flex-col overflow-hidden border border-slate-700 bg-[#0e1118] p-0 text-slate-100">
 
             {/* Header */}
-            <div className="shrink-0 border-b border-slate-800 px-5 py-5 sm:px-6">
+            <div className="shrink-0 border-b border-slate-800 p-5 sm:px-6">
             <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0">
                 <div className="mb-2 flex items-center gap-2 text-indigo-300">
                     <Users size={17} />
-                    <span className="text-xs font-semibold uppercase tracking-wider">
-                    Assignment overview
-                    </span>
+                    <span className="text-xs font-semibold uppercase tracking-wider">Assignment overview</span>
                 </div>
-
-                <h3 className="break-words text-xl font-semibold">
-                    {selectedAssignment?.title || "Assignment details"}
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-400">
-                    {selectedAssignment?.description || "No description available"}
-                </p>
-
+                <h3 className="break-words text-xl font-semibold">{selectedAssignment?.title || "Assignment details"}</h3>
+                <p className="mt-1 text-sm text-slate-400">{selectedAssignment?.description || "No description available"}</p>
                 {selectedAssignment?.fileUrl && (
-                    <a
-                    href={selectedAssignment.fileUrl}
-                    download={`${selectedAssignment.title || "Assignment"} details.pdf`}
-                    className="mt-2 inline-block text-sm text-slate-300 underline underline-offset-4 hover:text-violet-400"
-                    >
+                    <a href={selectedAssignment.fileUrl} download={`${selectedAssignment.title || "Assignment"} details.pdf`} className="mt-2 inline-block text-sm text-slate-300 underline underline-offset-4 hover:text-violet-400">
                     Download details of assignment
                     </a>
                 )}
                 </div>
-
                 <form method="dialog">
-                <button
-                    type="submit"
-                    aria-label="Close modal"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
-                >
+                <button type="submit" aria-label="Close modal" className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white">
                     <X size={18} />
                 </button>
                 </form>
             </div>
 
-            {/* Horizontal summary */}
-            <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-slate-800 pt-4">
-                <div className="flex items-center gap-2">
+            {/* Summary */}
+            <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3 border-t border-slate-800 pt-4">
+                <div className="flex items-center gap-2 text-sm">
                 <Users size={17} className="text-indigo-400" />
-                <span className="text-sm text-slate-400">Groups</span>
-                <span className="font-semibold tabular-nums">
-                    {selectedAssignment?.groups?.length ?? 0}
-                </span>
+                <span className="text-slate-400">Groups</span>
+                <span className="font-semibold">{selectedAssignment?.groups?.length ?? 0}</span>
                 </div>
-
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-sm">
                 <GraduationCap size={18} className="text-emerald-400" />
-                <span className="text-sm text-slate-400">Students</span>
-                <span className="font-semibold tabular-nums">
-                    {selectedAssignment?.groups?.reduce(
-                    (total: number, group: any) =>
-                        total + (group.members?.length ?? 0),
-                    0
-                    ) ?? 0}
+                <span className="text-slate-400">Students</span>
+                <span className="font-semibold">
+                    {selectedAssignment?.groups?.reduce((total: number, group: any) => total + (group.members?.length ?? 0), 0) ?? 0}
                 </span>
                 </div>
             </div>
             </div>
 
-            {/* Group directory */}
-            <div className="flex min-h-0 flex-1 flex-col p-4 sm:p-6">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            {/* Groups */}
+            <div className="flex min-h-0 flex-1 flex-col p-4 sm:p-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                <h4 className="text-sm font-semibold">
-                    Group directory
-                </h4>
-                <p className="mt-1 text-xs text-slate-500">
-                    Teams linked to this assignment
-                </p>
+                <h4 className="text-sm font-semibold">Group directory</h4>
+                <p className="mt-1 text-xs text-slate-500">Teams linked to this assignment</p>
                 </div>
-
-                <button
-                type="button"
-                onClick={() =>
-                    document.getElementById("createGroup")?.showModal()
-                }
-                className="shrink-0 rounded-lg border border-green-700 px-3 py-2 text-xs font-medium text-green-400 transition hover:bg-green-500/10"
-                >
+                <button type="button" onClick={() => document.getElementById("createGroup")?.showModal()} className="rounded-lg border border-green-700 px-3 py-2 text-xs font-medium text-green-400 hover:bg-green-500/10">
                 + Create group
                 </button>
             </div>
 
-            {/* Scrollable groups */}
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
                 {selectedAssignment?.groups?.length > 0 ? (
                 selectedAssignment.groups.map((group: any) => {
-                    const leader = findLeader(group?.members, group?.leader);
+                    const leader = findLeader(group.members, group.leader);
 
                     return (
-                    <div
-                        key={group._id}
-                        className="rounded-lg border border-slate-800 bg-[#131823] px-3 py-3 transition-colors hover:border-slate-700 sm:px-4"
-                    >
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
-
-                        {/* Group icon */}
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-300">
+                    <div key={group._id} className="rounded-lg border border-slate-800 bg-[#131823] p-3 transition-colors hover:border-slate-700 sm:px-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-300">
                             <Users size={18} />
                         </div>
 
-                        {/* Group name and member count */}
                         <div className="min-w-0 flex-1">
-                            <h5 className="break-words text-sm font-semibold text-slate-100">
-                            {group.name}
-                            </h5>
-
-                            <p className="mt-1 text-xs text-slate-500">
-                            {group.members?.length ?? 0} students
-                            </p>
+                            <h5 className="break-words text-sm font-semibold">{group.name}</h5>
+                            <p className="mt-1 text-xs text-slate-500">{group.members?.length ?? 0} students</p>
                         </div>
 
-                        {/* Leader */}
-                        <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-400">
-                            <span className="text-slate-500">Leader:</span>
-                            <span className="max-w-36 truncate font-medium text-blue-400">
-                            {leader || "Not found"}
-                            </span>
+                        <div className="min-w-0 text-xs text-slate-400">
+                            <span className="text-slate-500">Leader: </span>
+                            <span className="font-medium text-blue-400">{leader?.username || "Not found"}</span>
                         </div>
 
-                        {/* Assignment status */}
-                        <span
-                            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${
-                            group.AssignTask
-                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                                : "border-amber-500/20 bg-amber-500/10 text-amber-400"
-                            }`}
-                        >
-                            <span
-                            className={`size-1.5 rounded-full ${
-                                group.AssignTask
-                                ? "bg-emerald-400"
-                                : "bg-amber-400"
-                            }`}
-                            />
+                        <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${group.AssignTask ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-amber-500/20 bg-amber-500/10 text-amber-400"}`}>
+                            <span className={`size-1.5 rounded-full ${group.AssignTask ? "bg-emerald-400" : "bg-amber-400"}`} />
                             {group.AssignTask ? "Assigned" : "Pending"}
                         </span>
-
-                        {/* View students */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                            setSelectedGroup(group);
-                            document
-                                .getElementById("studentDetails")
-                                ?.showModal();
-                            }}
-                            className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-300 transition hover:border-slate-500 hover:bg-slate-800 hover:text-white"
-                        >
+                        {group.AssignTask && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedGroup(group);
+                                    setMessage("");
+                                    document.getElementById("sendAlert")?.showModal();
+                                }}
+                                className="tooltip cursor-pointer text-slate-200 hover:text-violet-300"
+                                data-tip="Send alert"
+                                aria-label="Send alert"
+                                >
+                                <BellRing size={20} strokeWidth={2} />
+                            </button>
+                        )}
+                        <button type="button" onClick={() => { setSelectedGroup(group); document.getElementById("studentDetails")?.showModal(); }} className="shrink-0 rounded-lg border border-slate-700 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
                             View students ({group.members?.length ?? 0})
                         </button>
                         </div>
@@ -983,16 +959,10 @@ const MyAssignments = () => {
                     );
                 })
                 ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-700 px-4 py-10 text-center">
-                    <Users size={24} className="text-slate-500" />
-
-                    <h5 className="mt-3 text-sm font-semibold text-slate-200">
-                    No groups assigned yet
-                    </h5>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                    Groups linked to this assignment will appear here.
-                    </p>
+                <div className="rounded-lg border border-dashed border-slate-700 px-4 py-10 text-center">
+                    <Users size={24} className="mx-auto text-slate-500" />
+                    <h5 className="mt-3 text-sm font-semibold text-slate-200">No groups assigned yet</h5>
+                    <p className="mt-1 text-xs text-slate-500">Groups linked to this assignment will appear here.</p>
                 </div>
                 )}
             </div>
@@ -1000,26 +970,17 @@ const MyAssignments = () => {
 
             {/* Footer */}
             <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-800 px-5 py-4 sm:px-6">
-            <p className="hidden text-xs text-slate-500 sm:block">
-                Assignment group overview
-            </p>
-
+            <p className="hidden text-xs text-slate-500 sm:block">Assignment group overview</p>
             <form method="dialog" className="ml-auto">
-                <button
-                type="submit"
-                className="rounded-lg border border-slate-700 px-5 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                >
+                <button type="submit" className="rounded-lg border border-slate-700 px-5 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white">
                 Close
                 </button>
             </form>
             </div>
         </div>
 
-        {/* Backdrop */}
         <form method="dialog" className="modal-backdrop bg-black/75">
-            <button type="submit" aria-label="Close modal">
-            Close
-            </button>
+            <button type="submit" aria-label="Close modal">Close</button>
         </form>
         </dialog>
 
@@ -1120,34 +1081,119 @@ const MyAssignments = () => {
             </button>
         </form>
         </dialog>
+        {/** send alert modal */}
+        <dialog id="sendAlert" className="modal">
+            <div className="modal-box w-11/12 max-w-lg border border-white/10 bg-[#11141c] p-0 text-slate-100">
+                {/* Header */}
+                <div className="flex items-start gap-4 border-b border-white/10 p-6">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300">
+                    <BellRing size={21} />
+                </div>
 
+                <div>
+                    <h3 className="text-xl font-semibold">
+                    Send email alert
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-400">
+                    Notify the assigned group about the upcoming deadline.
+                    </p>
+                </div>
+                </div>
+
+                {/* Message */}
+                <div className="p-6">
+                <label
+                    htmlFor="alertMessage"
+                    className="mb-2 block text-sm font-medium text-slate-200"
+                >
+                    Message
+                </label>
+
+                <textarea
+                    id="alertMessage"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Write your alert message..."
+                    rows={5}
+                    maxLength={2000}
+                    className="w-full resize-y rounded-xl border border-white/10 bg-[#0c0f16] p-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-violet-400/50"
+                />
+
+                <p className="mt-2 text-right text-xs text-slate-500">
+                    {message.length}/2000
+                </p>
+
+                <div className="mt-6 flex justify-end gap-3">
+                    <form method="dialog">
+                    <button
+                        type="submit"
+                        disabled={sendingAlert}
+                        className="btn btn-sm border border-white/10 bg-[#202530] text-slate-200 hover:bg-[#292f3c]"
+                    >
+                        Cancel
+                    </button>
+                    </form>
+
+                    <button
+                    type="button"
+                    disabled={!message.trim() || sendingAlert}
+                    onClick={() => {
+                        if (!selectedGroup) return;
+
+                        const leader = selectedGroup.members.find(
+                            (member: any) =>
+                            String(member._id) === String(selectedGroup.leader)
+                        );
+
+                        if (!leader?.email) {
+                            toast.error("Group leader email not found");
+                            return;
+                        }
+
+                        const teacherName = user?.username;
+
+                        if (!teacherName) {
+                            toast.error("Teacher username not found");
+                            return;
+                        }
+
+                        sendAlertMail(
+                            leader.email,
+                            teacherName,
+                            new Date(selectedAssignment.dueDate),
+                            message
+                        );
+                        }}
+                    className="btn btn-sm border-0 bg-green-500 text-white hover:bg-green-400 disabled:opacity-50"
+                    >
+                    {sendingAlert ? "Sending..." : "Confirm & Send"}
+                    </button>
+                </div>
+                </div>
+            </div>
+
+            {/* Backdrop */}
+            <form method="dialog" className="modal-backdrop bg-black/70">
+                <button type="submit" aria-label="Close modal">
+                Close
+                </button>
+            </form>
+        </dialog>
         {/** Create group */}
         <dialog id="createGroup" className="modal">
-
             <div className="modal-box max-w-4xl w-[95vw] p-0 rounded-2xl overflow-hidden bg-base-100 border border-base-300 max-h-[92vh]">
-
                 <form
-
                     onSubmit={(e) => {
-
                         e.preventDefault();
-
                         void createGroup();
-
                     }}
-
-                    className="flex flex-col max-h-[92vh]"
-
-                >
+                    className="flex flex-col max-h-[92vh]">
 
                     {/* Colorful header */}
 
                     <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 px-5 sm:px-8 py-6 text-white shrink-0">
-
                         <div className="absolute -right-8 -top-16 w-48 h-48 rounded-full bg-white/10" />
-
                         <div className="absolute right-28 -bottom-16 w-32 h-32 rounded-full bg-white/10" />
-
                         <div className="relative flex justify-between items-start gap-4">
 
                             <div>
