@@ -7,6 +7,7 @@ import assignmentRoutes from "./routes/assignment.route.js";
 import userRoutes from "./routes/user.route.js";
 import connectDB from "./config/db.js";
 import {startAssignmentClosingJob} from './jobs/checkingAssignment.js'
+import submssionRoutes from "./routes/submission.route.js"
 connectDB();
 const port = process.env.PORT || 3000;
 const app = express();
@@ -22,6 +23,7 @@ app.use(cors(corsOptions));
 app.use("/api", userRoutes);
 app.use("/api", groupRoutes);
 app.use("/api", assignmentRoutes);
+app.use("/api", submssionRoutes)
 
 startAssignmentClosingJob();
 

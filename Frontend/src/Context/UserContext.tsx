@@ -34,7 +34,12 @@ type AppContextType = {
   >;
 
   teacherGroups: any[];
-  setTeacherGropus: React.Dispatch<
+  setTeacherGroups: React.Dispatch<
+    React.SetStateAction<any[]>
+  >;
+  
+  submissions: any[];
+  setSubmissions: React.Dispatch<
     React.SetStateAction<any[]>
   >;
 
@@ -60,9 +65,10 @@ export function AppProvider({
     []
   );
 
-  const [teacherGroups, setTeacherGropus] = useState<any[]>(
+  const [teacherGroups, setTeacherGroups] = useState<any[]>(
     []
   );
+  const [submissions, setSubmissions] = useState<any[]>([])
 
   // --------------------------------
   // Get Teacher Assignments
@@ -87,15 +93,26 @@ export function AppProvider({
 
   const getTeacherGroups = async () => {
     try {
-      const res = await api.get("/getTeacherGroups");
-      setTeacherGropus(res.data?.group)
+        const res = await api.get("/getTeacherGroups");
+        setTeacherGroups(res.data?.group || []);
+      } catch (error) {
+          console.error("Error fetching teacher groups:", error);
+      }
+    };
+  // --------------------------------
+  // Get Assignments and submissions
+  // --------------------------------
+  const groupsId: any[] = teacherGroups.map((group)=>group._id)
+  console.log(groupsId)
+  const getSubmissions = async () => {
+    try {
+      const res =  await api.post("/getSubmissionsByGroups",{groupsId})
+      console.log("result",res)
+      setSubmissions(res.data?.submissions)
     } catch (error) {
-      console.log(error)
+        console.log(error)
     }
   }
-  // --------------------------------
-  // Get Student Assignments
-  // --------------------------------
 
   const getUserAssignments = async () => {
     try {
@@ -199,6 +216,8 @@ export function AppProvider({
     authenticate();
   }, []);
 
+
+
   // --------------------------------
   // Fetch Student Assignments
   // --------------------------------
@@ -210,7 +229,6 @@ export function AppProvider({
       user?.role === "student"
     ) {
       getUserAssignments();
-      getTeacherGroups();
     }
   }, [loading, loggedIn, user?.role]);
 
@@ -228,7 +246,16 @@ export function AppProvider({
       getTeacherGroups();
     }
   }, [loading, loggedIn, user?.role]);
-
+  console.log(submissions)
+  console.log(teacherGroups)
+  
+  useEffect (()=>{
+    if (!loading &&
+      loggedIn &&
+      user?.role === "teacher"){
+      getSubmissions();
+    }
+  },[teacherGroups])
   // --------------------------------
   // Context Provider
   // --------------------------------
@@ -252,7 +279,10 @@ export function AppProvider({
         setTeacherAssignments,
 
         teacherGroups,
-        setTeacherGropus,
+        setTeacherGroups,
+
+        submissions,
+        setSubmissions,
 
         logout,
       }}

@@ -220,10 +220,8 @@ const MyAssignments = () => {
         const leaderF = membersList.find(
             (member) => String(member._id) === String(leader)
         );
-        return leaderF?.username
+        return leaderF
     }
-    //console.log(findLeader(assignments[0]?.groups.members, assignments[0]?.groups.leader))
-    
     useEffect(() => {
         if (!loading && !loggedIn) {
         toast.error("Please login to continue");
@@ -232,17 +230,17 @@ const MyAssignments = () => {
     }, [loading, loggedIn, navigate]);
 
     function getRemainingDays(
-        dueDate: string | Date
-    ): number {
-        const today = new Date();
-        const due = new Date(dueDate);
+            dueDate: string | Date
+        ): number {
+            const today = new Date();
+            const due = new Date(dueDate);
 
-        today.setHours(0, 0, 0, 0);
-        due.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            due.setHours(0, 0, 0, 0);
 
-        return Math.round(
-        (due.getTime() - today.getTime()) / 86400000
-        );
+            return Math.round(
+            (due.getTime() - today.getTime()) / 86400000
+            );
     }
 
     function formatDate(date: string | Date): string {
@@ -255,33 +253,33 @@ const MyAssignments = () => {
 
     function getStatus(assignment: (typeof assignments)[number]) {
         if (assignment.isClosed && assignment.isCompleted) {
-        return {
-            label: "Graded",
-            icon: CheckCircle2,
-            style: "bg-emerald-400/10 text-emerald-300",
-        };
+            return {
+                label: "Graded",
+                icon: CheckCircle2,
+                style: "bg-emerald-400/10 text-emerald-300",
+            };
         }
 
         if (assignment.isClosed && !assignment.isCompleted) {
-        return {
-            label: "Expired",
-            icon: AlertCircle,
-            style: "bg-rose-400/10 text-rose-300",
-        };
+            return {
+                label: "Expired",
+                icon: AlertCircle,
+                style: "bg-rose-400/10 text-rose-300",
+            };
         }
 
         if (!assignment.isClosed && assignment.isCompleted) {
-        return {
-            label: "Needs review",
-            icon: Clock3,
-            style: "bg-amber-400/10 text-amber-300",
-        };
+            return {
+                label: "Needs review",
+                icon: Clock3,
+                style: "bg-amber-400/10 text-amber-300",
+            };
         }
 
         return {
-        label: "Pending",
-        icon: CircleDashed,
-        style: "bg-blue-400/10 text-blue-300",
+            label: "Pending",
+            icon: CircleDashed,
+            style: "bg-blue-400/10 text-blue-300",
         };
     }
 
@@ -502,8 +500,8 @@ const MyAssignments = () => {
                     const StatusIcon = status.icon;
 
                     const daysLeft = assignment.dueDate
-                    ? getRemainingDays(assignment.dueDate)
-                    : null;
+                        ? getRemainingDays(assignment.dueDate)
+                        : null;
 
                     return (
                     <article

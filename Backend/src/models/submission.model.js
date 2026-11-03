@@ -31,6 +31,11 @@ const submissionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    submittedBy : {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     isConfirmedByAdmin: {
       type: Boolean,
       default: false,

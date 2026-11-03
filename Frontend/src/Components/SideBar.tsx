@@ -8,6 +8,7 @@ import {
     NotepadText,
     Users,
     X,
+    MailClock
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAppContext } from "../Context/UserContext";
@@ -46,9 +47,9 @@ const SideBar = ({ open, setOpen }: SideBarProps) => {
         icon: Users,
         },
         {
-        label: "Calendar",
-        path: "/calendar",
-        icon: CalendarClock,
+        label: "Submissions",
+        path: "/submission",
+        icon: MailClock,
         },
         {
         label: "Analytics",

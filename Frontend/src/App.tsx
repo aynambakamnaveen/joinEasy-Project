@@ -11,7 +11,8 @@ import Home from "./Pages/Home";
 import Login from "./Components/Login";
 import { Toaster } from "react-hot-toast";
 import MyAssignment from "./Pages/MyAssignment";
-
+import MyGroups from "./Pages/MyGroups";
+import Submission from "./Pages/Submission";
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -45,6 +46,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path='/myAssignments' element={<MyAssignment/>}/>
+          <Route path='/myGroups' element={<MyGroups/>}/>
+          <Route path="/submission" element={<Submission/>}/>
         </Routes>
         <Toaster
           position="top-center"

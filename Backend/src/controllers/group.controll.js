@@ -279,7 +279,9 @@ export const getTeacherGroups = async (req, res) => {
   try {
     const group = await Group.find({
       createdBy: req.user._id,
-    });
+    })
+      .populate("members", "_id username email ProfileImage")
+      .populate("assignment", "_id title dueDate isClosed");
     if (!group) {
       return res.status(404).json({
         message: "Group not found",

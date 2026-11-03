@@ -1,5 +1,6 @@
 import submission from "../models/submission.model.js";
 import Group from "../models/group.model.js";
+
 export const submissionController = async (req, res) => {
   try {
     const { gitHubLink, liveLink, description } = req.body;
@@ -61,6 +62,7 @@ export const submissionController = async (req, res) => {
       description,
       isConfirmedByUser: true,
       isConfirmedByAdmin: false,
+      submittedBy: req.user._id,
     });
     group.isSubmitted = true;
     await group.save();
@@ -122,27 +124,20 @@ export const changeSubmission = async (req, res) => {
 
 export const getSubmissionsByGroups = async (req, res) => {
   try {
-    const { groupIds } = req.body;
-
-    if (groupIds.length === 0) {
-      return res.status(200).json({
-        message: "Submissions Not Found",
-      });
-    }
-
+    const {groupIds} = req.body;
+    console.log(req.body)
     const submissions = await submission.find({
       group: { $in: groupIds },
     });
-
     return res.status(200).json({
-      message: submissions.length
-        ? "Submissions fetched successfully"
-        : "No submissions found for these groups",
       submissions,
     });
+    console.log(submissions)
   } catch (error) {
+    console.log(error)
     return res.status(500).json({
       message: "Internal server error",
     });
   }
 };
+
