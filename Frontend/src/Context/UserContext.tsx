@@ -102,17 +102,29 @@ export function AppProvider({
   // --------------------------------
   // Get Assignments and submissions
   // --------------------------------
-  const groupsId: any[] = teacherGroups.map((group)=>group._id)
-  console.log(groupsId)
+  const groupsIds: any[] = teacherGroups.map((group)=>group._id)
+
+  console.log("Groups IDs:", groupsIds)
+
   const getSubmissions = async () => {
-    try {
-      const res =  await api.post("/getSubmissionsByGroups",{groupsId})
-      console.log("result",res)
-      setSubmissions(res.data?.submissions)
-    } catch (error) {
-        console.log(error)
-    }
-  }
+      try {
+          const res = await api.post(
+              "/getSubmissionsByGroups",
+              {
+                  groupIds: groupsIds
+              }
+          );
+
+          console.log("Result:", res.data);
+          setSubmissions(res.data?.submissions || []);
+
+      } catch (error) {
+          console.log(
+              "API Error:",
+              error
+          );
+      }
+  };
 
   const getUserAssignments = async () => {
     try {

@@ -14,20 +14,21 @@ const router = express.Router();
 router.post(
     "/createSubmission/:groupId/:assignmentId",
     protect,
-    authorize("teacher"),
+    authorize("student"),
     submissionController,
 );
 
 router.patch(
-    "/submissionDone/:submissionId",
+    "/submissionAccepted/:submissionId/:groupId",
     protect,
     authorize("teacher"),
     changeSubmission,
 );
+
 router.post(
     "/getSubmissionsByGroups",
     protect,
-    authorize("teacher"),
+    authorize("teacher", "student"),
     getSubmissionsByGroups,
 );
 

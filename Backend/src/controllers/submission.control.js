@@ -125,10 +125,20 @@ export const changeSubmission = async (req, res) => {
 export const getSubmissionsByGroups = async (req, res) => {
   try {
     const {groupIds} = req.body;
+    if (!groupIds || !Array.isArray(groupIds) || groupIds.length === 0) {
+      return res.status(400).json({
+        message: "groupIds must be a non-empty array",
+      });
+    }
     console.log(req.body)
-    const submissions = await submission.find({
-      group: { $in: groupIds },
-    });
+    const submissions = await submission
+      .find({
+        group: { $in: groupIds },
+      })
+      .populate("group", "name")
+      .populate("assignment", "title description fileUrl")
+      .populate("submittedBy", "username email")
+      .lean();
     return res.status(200).json({
       submissions,
     });
