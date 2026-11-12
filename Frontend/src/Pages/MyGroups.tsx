@@ -16,7 +16,7 @@ import { useAppContext } from "../Context/UserContext";
 import api from "../api/axios";
 
 const MyGroups = () => {
-    const { user, loggedIn, loading, teacherGroups } = useAppContext();
+    const { user, loggedIn, loading, teacherGroups, setTeacherGroups } = useAppContext();
     const navigate = useNavigate();
 
     const [search, setSearch] = useState("");

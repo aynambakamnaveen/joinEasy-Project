@@ -5,19 +5,26 @@ async function closeExpiredAssignments() {
     try {
         const now = new Date();
 
-        const result = await Assignment.updateMany(
-        {
-            dueDate: { $lte: now },
-            isClosed: false,
-        },
-        {
-            $set: { isClosed: true },
-        },
-        );
+        // Find assignments whose deadlines have passed
+        const expiredAssignments = await Assignment.find({
+        dueDate: { $lte: now },
+        isClosed: false,
+        }).populate("assignedGroups");
 
-        if (result.modifiedCount > 0) {
-        console.log(`Closed ${result.modifiedCount} expired assignments`);
+        for (const assignment of expiredAssignments) {
+        assignment.isClosed = true;
+        // Check whether all groups have submitted and been accepted
+        const allGroupsCompleted =
+            assignment.assignedGroups.length > 0 &&
+            assignment.assignedGroups.every(
+                (group) => group.isSubmitted && group.accepted,
+            );
+        if (allGroupsCompleted) {
+            assignment.isCompleted = true;
         }
+        await assignment.save();
+        }
+        console.log(`Processed ${expiredAssignments.length} expired assignments`);
     } catch (error) {
         console.error("Failed to close assignments:", error);
     }

@@ -7,6 +7,7 @@ import {
 import Card from "../Components/card";
 import api from "../api/axios"
 
+
 const TeacherDashboard = () => {
     const {user, loggedIn, loading, teacherAssignments, teacherGroups,} = useAppContext();
     const [assign, setAssign] = useState<boolean>(true)
@@ -88,6 +89,7 @@ const TeacherDashboard = () => {
             setLeader(updatedMembers[0] || "");
         }
     };
+
     const createGroup = async () => {
             if (!title.trim()) {
                 toast.error("Enter a group title");
@@ -139,91 +141,62 @@ const TeacherDashboard = () => {
     }, [loading, loggedIn, navigate]);
 
     const assignments = useMemo(
-
         () => teacherAssignments || [],
-
         [teacherAssignments]
-
     );
 
-    console.log("teacher assignments", teacherAssignments)
-
     const assignedGroups = useMemo(
-
         () =>
-
         (teacherGroups || []).filter(
-
             (group) => group.AssignTask !== false
-
         ),
-
         [teacherGroups]
-
     );
 
     const needsReview = assignedGroups.filter(
+        (group) =>
+            group.isSubmitted === true &&
+            group.submission != null &&
+            group.accepted !== true
+    );
 
-        (group) => (group.accepted !== true && group.isSubmitted === true )
+    const awaitingSubmission = assignedGroups.filter(
+        (group) =>
+            group.AssignTask === true &&
+            group.isSubmitted !== true
+    );
 
-    );
-
-    const reviewedGroups = assignedGroups.filter(
-
-        (group) => group.accepted === true
-
-    );
-
-    const awaitingSubmission = assignedGroups.filter(
-
-        (group) => group.isSubmitted !== true
-
-    );
+    const reviewedGroups = assignedGroups.filter(
+        (group) =>
+            group.isSubmitted === true &&
+            group.submission != null &&
+            group.accepted === true
+    );
 
     const normalizedSearch = search.trim().toLowerCase();
 
     const filteredAssignments = useMemo(
-
         () =>
-
         assignments.filter((assignment) =>
-
             (assignment.title || "")
-
             .toLowerCase()
-
             .includes(normalizedSearch)
-
         ),
-
         [assignments, normalizedSearch]
-
     );
 
     const showcaseAssignments = filteredAssignments.slice(0, 4);
-
     const deadlines = useMemo(
-
         () =>
-
         filteredAssignments
-
             .filter((assignment) => assignment.dueDate)
-
             .map((assignment) => ({
-
             ...assignment,
-
             daysLeft: getRemainingDays(assignment.dueDate),
-
             }))
-
             .sort((a, b) => a.daysLeft - b.daysLeft)
-
             .slice(0, 4),
-
         [filteredAssignments]
-
     );
 
     function getRemainingDays(dueDate: string | Date): number {
@@ -245,77 +218,43 @@ const TeacherDashboard = () => {
     }
 
     function formatDate(date: string | Date): string {
-
         return new Date(date).toLocaleDateString("en-IN", {
-
         day: "2-digit",
-
         month: "short",
-
         year: "numeric",
-
         });
-
     }
 
     function getDeadlineText(daysLeft: number): string {
-
         if (daysLeft < 0) {
-
         const days = Math.abs(daysLeft);
-
         return `${days} ${days === 1 ? "day" : "days"} overdue`;
-
         }
-
         if (daysLeft === 0) return "Due today";
-
         if (daysLeft === 1) return "Due tomorrow";
-
         return `${daysLeft} days left`;
-
     }
 
     function getDeadlineStyle(daysLeft: number) {
-
         if (daysLeft < 0) {
-
         return {
-
             text: "text-rose-400",
-
             bg: "bg-rose-400/10",
-
             label: "Overdue",
-
         };
-
         }
-
         if (daysLeft <= 2) {
-
         return {
-
             text: "text-amber-400",
-
             bg: "bg-amber-400/10",
-
             label: "Due soon",
-
         };
-
         }
-
         return {
-
         text: "text-slate-400",
-
         bg: "bg-slate-400/10",
-
         label: "Scheduled",
-
         };
-
     }
 
     const Assign = async (groupId: string) => {
@@ -589,11 +528,8 @@ const TeacherDashboard = () => {
                 <div>
 
                     <h2 className="text-base font-semibold text-slate-100">
-
                     Assignments
-
                     </h2>
-
                     <p className="mt-1 text-xs text-slate-500">
 
                     Your latest assignment records

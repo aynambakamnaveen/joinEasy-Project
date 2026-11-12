@@ -19,12 +19,14 @@ const assignmentSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: function (value) {
-          if (value == null) return true;
+          // Validate only when creating or modifying dueDate
+          if (!this.isNew && !this.isModified("dueDate")) {
+            return true;
+          }
 
           return value > new Date();
         },
-
-        message: "Due date must be in the future.",
+        message: "Due date must be in the future",
       },
     },
 
@@ -44,6 +46,7 @@ const assignmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
     groups: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -17,6 +17,7 @@ import {
     UserRound ,
     Crown , ClipboardCheck,MoreVertical, Users, BellRing 
 } from "lucide-react";
+
 import { useAppContext } from "../Context/UserContext";
 import api from "../api/axios";
 type AssignmentFilter =
@@ -63,6 +64,40 @@ const MyAssignments = () => {
     const [selectedGroup, setSelectedGroup] = useState<any>(null);
     const [sendingAlert, setSendingAlert] = useState(false);
     const [message, setMessage] = useState("");
+    const [username, setUsername] = useState<string>("");
+    const [addmember, setAddMember] = useState("");
+    const handleAddMember = async () => {
+        if (!addmember.trim()) {
+            toast.error("Please enter a username");
+            return;
+        }
+
+        try {
+            const response = await api.post(
+                `/${selectedGroup._id}/members`,
+                {
+                    username: addmember.trim(),
+                }
+            );
+
+            toast.success(response.data.message);
+
+            setAddMember("");
+
+            document.getElementById("add_member_modal")?.close();
+
+            // Refresh selected group if required
+            // Update your group state here if you maintain local group data
+
+        } catch (error: any) {
+            console.error("Failed to add member:", error);
+
+            toast.error(
+                error.response?.data?.message ||
+                "Failed to add member"
+            );
+        }
+    };
     const sendAlertMail = async (
         mail: string,
         teacherName: string,
@@ -84,7 +119,7 @@ const MyAssignments = () => {
                 email: mail,
                 teacherName,
                 dueDate: dueDate.toISOString(),
-                message,
+                message: messageText,
             });
 
             toast.success("Alert sent successfully");
@@ -118,23 +153,21 @@ const MyAssignments = () => {
         if (file) {
             formData.append("file", file);
         }
-
         try {
             const response:any = await api.post(
-            "/createAssignment",
-            formData
+                "/createAssignment",
+                formData
             );
-
             toast.success("New assignment created");
-
-            document.getElementById("createAssignment")?.close();
-
             setTitle("");
             setDescription("");
             setDueDate("");
             setLink("");
             setFile(null);
-            setTeacherAssignments([...teacherAssignments, response.assignment])
+            const newAssignment = response.data.assignment; 
+            setTeacherAssignments([...(teacherAssignments || []), newAssignment]);
+            
+            document.getElementById("createAssignment")?.close();
         } catch (err) {
             console.error(err);
             toast.error("Something went wrong, please try later");
@@ -159,7 +192,7 @@ const MyAssignments = () => {
         }
         setCurrentmember("");
     };
-
+    console.log(selectedAssignment)
     const removeMember = (memberToRemove: string) => {
         if (!members.includes(memberToRemove)) {
             toast.error("Member does not exist");
@@ -554,11 +587,6 @@ const MyAssignments = () => {
                         </div>
 
                         <div className="flex items-center justify-between gap-3 pl-13 md:justify-end md:pl-0">
-                            {assignment.isClosed && <span
-                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium bg-yellow-400/10 text-yellow-300`}
-                            >
-                                closed
-                            </span> }
                             <button
                                 className="btn btn-primary btn-sm"
                                 onClick={() => {
@@ -851,7 +879,46 @@ const MyAssignments = () => {
             <button aria-label="Close modal">Close</button>
         </form>
         </dialog>
+        {/** Adding member in the group modal */}
+        <dialog id="add_member_modal" className="modal">
+            <div className="modal-box max-w-md">
+                <h3 className="font-bold text-lg">Add Group Member</h3>
 
+                <p className="text-sm text-gray-500 mt-1">
+                    Enter the username of the student you want to add.
+                </p>
+
+                <div className="mt-5">
+                    <input
+                        type="text"
+                        placeholder="Enter username"
+                        className="input input-bordered w-full"
+                        value={addmember}
+                        onChange={(e) => setAddMember(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") handleAddMember();
+                        }}
+                    />
+                </div>
+
+                <div className="modal-action">
+                    <form method="dialog">
+                        <button className="btn btn-ghost">Cancel</button>
+                    </form>
+
+                    <button
+                        className="btn btn-success"
+                        onClick={handleAddMember}
+                    >
+                        Confirm
+                    </button>
+                </div>
+            </div>
+
+            <form method="dialog" className="modal-backdrop">
+                <button>Close</button>
+            </form>
+        </dialog>
         {/**viewing groups */}
         <dialog id="my_modal_2" className="modal">
         <div className="modal-box flex max-h-[85vh] w-11/12 max-w-3xl flex-col overflow-hidden border border-slate-700 bg-[#0e1118] p-0 text-slate-100">
@@ -903,8 +970,15 @@ const MyAssignments = () => {
                 <h4 className="text-sm font-semibold">Group directory</h4>
                 <p className="mt-1 text-xs text-slate-500">Teams linked to this assignment</p>
                 </div>
-                <button type="button" onClick={() => document.getElementById("createGroup")?.showModal()} className="rounded-lg border border-green-700 px-3 py-2 text-xs font-medium text-green-400 hover:bg-green-500/10">
-                + Create group
+                <button
+                    disabled={selectedAssignment?.isClosed}
+                    type="button"
+                    onClick={() =>
+                        document.getElementById("createGroup")?.showModal()
+                    }
+                    className="rounded-lg border border-green-700 px-3 py-2 text-xs font-medium text-green-400 hover:bg-green-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    + Create group
                 </button>
             </div>
 
@@ -932,9 +1006,9 @@ const MyAssignments = () => {
 
                         <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${group.AssignTask ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-amber-500/20 bg-amber-500/10 text-amber-400"}`}>
                             <span className={`size-1.5 rounded-full ${group.AssignTask ? "bg-emerald-400" : "bg-amber-400"}`} />
-                            {group.AssignTask ? "Assigned" : "Pending"}
+                            {group.AssignTask ? "Assigned" : "Not assigned"}
                         </span>
-                        {group.AssignTask && (
+                        {!selectedAssignment?.isClosed &&group.AssignTask && (
                             <button
                                 type="button"
                                 onClick={() => {
@@ -985,71 +1059,73 @@ const MyAssignments = () => {
 
         {/**Modal for showing students data */}
         <dialog id="studentDetails" className="modal">
-        <div className="modal-box w-11/12 max-w-xl border border-base-300 p-0">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-base-300 p-5">
-            <div>
-                <h3 className="text-lg font-bold">
-                Group Members
-                </h3>
-                <p className="mt-1 text-sm opacity-60">
-                {selectedGroup?.name || "Selected group"} ·{" "}
-                {selectedGroup?.members?.length ?? 0} members
-                </p>
-            </div>
+            <div className="modal-box w-11/12 max-w-xl border border-base-300 p-0">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-base-300 p-5">
+                <div>
+                    <h3 className="text-lg font-bold">
+                    Group Members
+                    </h3>
+                    <p className="mt-1 text-sm opacity-60">
+                    {selectedGroup?.name || "Selected group"} ·{" "}
+                    {selectedGroup?.members?.length ?? 0} members
+                    </p>
+                </div>
 
-            <div className="flex size-10 items-center justify-center rounded-xl bg-base-200">
-                <Users size={20} />
-            </div>
-            </div>
+                <div className="flex size-10 items-center justify-center rounded-xl bg-base-200">
+                    <Users size={20} />
+                </div>
+                </div>
 
-            {/* Members list */}
-            <div className="p-4">
-            <ul className="list bg-base-100 rounded-box">
-                <li className="p-4 pb-2 text-xs font-semibold uppercase tracking-wide opacity-60">
-                Students in this group
-                </li>
+                {/* Members list */}
+                <div className="p-4">
+                <ul className="list bg-base-100 rounded-box">
+                    <div className="flex items-center justify-between px-4 py-2">
+                        <li className="p-4 pb-2 text-md font-semibold uppercase tracking-wide opacity-60">
+                        Students in this group
+                        </li>
+                        <button  onClick={() =>document.getElementById("add_member_modal")?.showModal()} className="btn btn-sm btn-primary">Add member</button>
+                    </div>
+                    {selectedGroup?.members?.length > 0 ? (
+                    selectedGroup.members.map((member: any) => {
+                        const isLeader =
+                        String(selectedGroup.leader) === String(member._id);
 
-                {selectedGroup?.members?.length > 0 ? (
-                selectedGroup.members.map((member: any) => {
-                    const isLeader =
-                    String(selectedGroup.leader) === String(member._id);
+                        return (
+                        <li
+                            key={member._id}
+                            className="list-row items-center"
+                        >
+                            {/* Profile image */}
+                            <div>
+                            <img
+                                className="size-12 rounded-box object-cover"
+                                src={
+                                member.ProfileImage ||
+                                "https://ui-avatars.com/api/?name=Student&background=e5e7eb&color=374151"
+                                }
+                                alt={`${member.username || "Student"} profile`}
+                            />
+                            </div>
 
-                    return (
-                    <li
-                        key={member._id}
-                        className="list-row items-center"
-                    >
-                        {/* Profile image */}
-                        <div>
-                        <img
-                            className="size-12 rounded-box object-cover"
-                            src={
-                            member.ProfileImage ||
-                            "https://ui-avatars.com/api/?name=Student&background=e5e7eb&color=374151"
-                            }
-                            alt={`${member.username || "Student"} profile`}
-                        />
-                        </div>
+                            {/* Member information */}
+                            <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="break-words font-semibold">
+                                {member.username || "Unknown user"}
+                                </span>
 
-                        {/* Member information */}
-                        <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className="break-words font-semibold">
-                            {member.username || "Unknown user"}
-                            </span>
+                                {isLeader && (
+                                <span className="badge badge-sm badge-primary">
+                                    <Crown size={12} className="mr-1" />
+                                    Leader
+                                </span>
+                                )}
+                            </div>
 
-                            {isLeader && (
-                            <span className="badge badge-sm badge-primary">
-                                <Crown size={12} className="mr-1" />
-                                Leader
-                            </span>
-                            )}
-                        </div>
-
-                        <div className="mt-1 break-all text-xs opacity-60">
-                            {member.email || "No email available"}
-                        </div>
+                            <div className="mt-1 break-all text-xs opacity-60">
+                                {member.email || "No email available"}
+                            </div>
                         </div>
                     </li>
                     );

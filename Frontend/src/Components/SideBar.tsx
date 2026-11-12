@@ -37,12 +37,12 @@ const SideBar = ({ open, setOpen }: SideBarProps) => {
         icon: House,
         },
         {
-        label: "My Assignments",
+        label: "Assignments",
         path: "/myAssignments",
         icon: NotepadText,
         },
         {
-        label: "My Groups",
+        label: "Groups",
         path: "/myGroups",
         icon: Users,
         },

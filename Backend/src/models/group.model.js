@@ -40,12 +40,18 @@ const groupSchema = new mongoose.Schema(
     accepted : {
       type: Boolean,
       default: false
-    }
+    },
+    submission: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Submission",
+      default: null
+    },
   },
   {
     timestamps: true,
   },
 );
+
 
 const Group = mongoose.model("Group", groupSchema);
 

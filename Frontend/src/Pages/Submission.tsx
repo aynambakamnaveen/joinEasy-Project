@@ -175,9 +175,9 @@ const Submission = () => {
                 prev.map((item) =>
                     item._id === submission._id
                         ? {
-                              ...item,
-                              isConfirmedByAdmin: true,
-                          }
+                            ...item,
+                            isConfirmedByAdmin: true,
+                        }
                         : item
                 )
             );
@@ -186,9 +186,9 @@ const Submission = () => {
             setSelectedSubmission((prev: any) =>
                 prev?._id === submission._id
                     ? {
-                          ...prev,
-                          isConfirmedByAdmin: true,
-                      }
+                        ...prev,
+                        isConfirmedByAdmin: true,
+                    }
                     : prev
             );
 
@@ -1188,8 +1188,6 @@ const Submission = () => {
                     </div>
 
                 </div>
-
-                {/* DAISYUI BACKDROP */}
                 <form method="dialog" className="modal-backdrop">
                     <button aria-label="Close modal">close</button>
                 </form>

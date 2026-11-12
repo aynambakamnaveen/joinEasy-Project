@@ -65,6 +65,7 @@ export const submissionController = async (req, res) => {
       submittedBy: req.user._id,
     });
     group.isSubmitted = true;
+    group.submission = newSubmission._id;
     await group.save();
 
     return res.status(201).json({

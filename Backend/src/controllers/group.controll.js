@@ -78,7 +78,7 @@ export const createGroup = async (req, res) => {
         message: "Assignment not found",
       });
     }
-    if (assignmentExists.groups.length > 5) {
+    if (assignmentExists.groups.length >= 5) {
       return res.status(400).json({
         message: "Max 5 groups can be created at each assignment",
       });
@@ -203,7 +203,7 @@ export const getMyGroup = async (req, res) => {
 export const addMember = async (req, res) => {
   try {
     const { groupId } = req.params;
-    const { username } = req.body;
+    const username = req.body.username?.trim();
 
     if (!username) {
       return res.status(400).json({
@@ -211,7 +211,6 @@ export const addMember = async (req, res) => {
       });
     }
 
-    // Find group
     const group = await Group.findById(groupId);
 
     if (!group) {
@@ -222,13 +221,13 @@ export const addMember = async (req, res) => {
 
     // Find student
     const student = await User.findOne({
-      username,
+      username: { $regex: `^${username}$`, $options: "i" },
       role: "student",
     });
 
     if (!student) {
-      return res.status(404).json({
-        message: "Student not found",
+      return res.status(400).json({
+        message: `Student '${username}' not found`,
       });
     }
 
@@ -239,7 +238,7 @@ export const addMember = async (req, res) => {
 
     if (alreadyMember) {
       return res.status(400).json({
-        message: "Student is already in this group",
+        message: `${username} is already in this group`,
       });
     }
 
@@ -252,21 +251,19 @@ export const addMember = async (req, res) => {
 
     if (existingGroup) {
       return res.status(409).json({
-        message: "Student already belongs to another group for this assignment",
+        message: `${username} already belongs to another group for this assignment`,
       });
     }
 
-    // Add student
     group.members.push(student._id);
-
     await group.save();
 
     return res.status(200).json({
-      message: "Student added successfully",
+      message: `${username} added successfully`,
       group,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Add member error:", error);
 
     return res.status(500).json({
       message: "Failed to add student",
@@ -281,7 +278,7 @@ export const getTeacherGroups = async (req, res) => {
       createdBy: req.user._id,
     })
       .populate("members", "_id username email ProfileImage")
-      .populate("assignment", "_id title dueDate isClosed");
+      .populate("assignment", "_id title dueDate isClosed").populate("submission", "_id gitHubLink liveLink description isConfirmedByUser isConfirmedByAdmin confirmedAt ");
     if (!group) {
       return res.status(404).json({
         message: "Group not found",
