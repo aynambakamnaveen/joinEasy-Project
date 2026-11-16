@@ -278,7 +278,7 @@ export const getTeacherGroups = async (req, res) => {
       createdBy: req.user._id,
     })
       .populate("members", "_id username email ProfileImage")
-      .populate("assignment", "_id title dueDate isClosed").populate("submission", "_id gitHubLink liveLink description isConfirmedByUser isConfirmedByAdmin confirmedAt ");
+      .populate("assignment", "_id title dueDate isClosed").populate("submission", "_id gitHubLink liveLink description isConfirmedByUser isConfirmedByAdmin confirmedAt ").lean();
     if (!group) {
       return res.status(404).json({
         message: "Group not found",

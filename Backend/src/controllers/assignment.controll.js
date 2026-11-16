@@ -133,7 +133,6 @@ export const getUserAssignments = async (req, res) => {
     const assignments = await Assignment.find({
       _id: { $in: assignmentIds },
     }).populate("createdBy", "username name email");
-    console.log(assignments)
     return res.status(200).json({
       assignments,
     });

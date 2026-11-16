@@ -48,7 +48,7 @@ const Submission = () => {
 
     const [isAccepting, setIsAccepting] = useState(false);
 
-    // Sync context submissions with local state
+
     useEffect(() => {
         setSubmissionsList(submissions || []);
     }, [submissions]);
@@ -120,7 +120,6 @@ const Submission = () => {
         });
     };
 
-    // Open DaisyUI modal
     const openDetails = (submission: any, type: DetailType) => {
         setSelectedSubmission(submission);
         setDetailType(type);
