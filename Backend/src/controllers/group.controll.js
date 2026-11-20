@@ -178,8 +178,13 @@ export const getMyGroup = async (req, res) => {
     const group = await Group.find({
       members: req.user._id,
     })
-      .populate("members", "name email")
-      .populate("createdBy", "name email");
+      .populate("members", "_id username email ProfileImage")
+      .populate("assignment", "_id title dueDate isClosed")
+      .populate(
+        "submission",
+        "_id gitHubLink liveLink description isConfirmedByUser isConfirmedByAdmin confirmedAt ",
+      )
+      .lean();
 
     if (!group) {
       return res.status(404).json({

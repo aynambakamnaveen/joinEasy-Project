@@ -132,7 +132,17 @@ export const getUserAssignments = async (req, res) => {
     // Find assignments belonging to those groups
     const assignments = await Assignment.find({
       _id: { $in: assignmentIds },
-    }).populate("createdBy", "username name email");
+    })
+      .populate("createdBy", "username name email")
+      .populate("assignedGroups")
+      .populate({
+        path: "groups",
+        populate: {
+          path: "members",
+          select: "_id username ProfileImage email",
+        },
+      })
+      .lean();;
     return res.status(200).json({
       assignments,
     });

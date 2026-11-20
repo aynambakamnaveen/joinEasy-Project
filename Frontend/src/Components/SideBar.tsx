@@ -19,7 +19,7 @@ interface SideBarProps {
 }
 
 const SideBar = ({ open, setOpen }: SideBarProps) => {
-    const { loading, logout } = useAppContext();
+    const { loading, logout, user } = useAppContext();
     const location = useLocation();
 
     if (loading) {

@@ -28,6 +28,9 @@ type AppContextType = {
   assignments: any[];
   setAssignments: React.Dispatch<React.SetStateAction<any[]>>;
 
+  studentGroups: any[];
+  setStudentGroups: React.Dispatch<React.SetStateAction<any[]>>;
+  
   teacherAssignments: any[];
   setTeacherAssignments: React.Dispatch<
     React.SetStateAction<any[]>
@@ -60,6 +63,8 @@ export function AppProvider({
   const [loading, setLoading] = useState(true);
 
   const [assignments, setAssignments] = useState<any[]>([]);
+  
+  const [studentGroups, setStudentGroups] = useState<any[]>([]);
 
   const [teacherAssignments, setTeacherAssignments] = useState<any[]>(
     []
@@ -227,9 +232,14 @@ export function AppProvider({
   useEffect(() => {
     authenticate();
   }, []);
-
-
-
+  const getStudentGroups = async () => {
+    try {
+      const res = await api.get("/myGroup");
+      setStudentGroups(res.data.group || []);
+    } catch (error) {
+      console.error("Error fetching student groups:", error);
+    }
+  }
   // --------------------------------
   // Fetch Student Assignments
   // --------------------------------
@@ -241,6 +251,7 @@ export function AppProvider({
       user?.role === "student"
     ) {
       getUserAssignments();
+      getStudentGroups();
     }
   }, [loading, loggedIn, user?.role]);
 
@@ -292,6 +303,9 @@ export function AppProvider({
 
         teacherGroups,
         setTeacherGroups,
+
+        studentGroups,
+        setStudentGroups,
 
         submissions,
         setSubmissions,
